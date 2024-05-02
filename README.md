@@ -10,8 +10,13 @@ Run `ng serve` for a dev env. Navigate to `http://localhost:4200/`
 
 ## Copying code to see how it works. 
 ** Copy the code to a seperate screen or window. ** - This is important, because if you paste it in the app itself it will refresh and you will lose the data. 
+
 Copy all three files. 
+
 Go to app.component.html -> paste the html code 
+
 Go to app.component.ts -> paste the ts code 
+
 Go to app.component.css -> paste the css code
+
 - The app should auto refresh and you should be able to see the results.

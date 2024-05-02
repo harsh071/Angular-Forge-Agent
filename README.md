@@ -4,6 +4,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 
 ## Runing the application
 Go to environment.development.ts and insert your API key for Gemini \webapp\src\environments\environment.development.ts
+
 This is a simple angular app, docs: https://angular.io/guide/setup-local
 run `npm install`
 Run `ng serve` for a dev env. Navigate to `http://localhost:4200/`

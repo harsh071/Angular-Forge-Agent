@@ -137,48 +137,14 @@ const materialImports: string[] = [
   providers: [FileConversionService, HttpClient, HttpClientModule],
 })
 export class AppComponent {
-  tasks: { name: string; completed: boolean }[] = [];
   imageDescription = '';
   file: string;
   formatedFiles: string[] = [];
-  balance = 1000;
-  points = 500;
-  cards = [
-    {
-      number: '1234567890123456',
-      type: 'Visa',
-      balance: 500,
-    },
-    {
-      number: '0987654321098765',
-      type: 'Mastercard',
-      balance: 1000,
-    },
-  ];
-  transactions = [
-    {
-      date: '2023-03-08',
-      description: 'Transfer to John Doe',
-      amount: -100,
-    },
-    {
-      date: '2023-03-07',
-      description: 'Payment to Netflix',
-      amount: -20,
-    },
-    {
-      date: '2023-03-06',
-      description: 'Deposit from Jane Doe',
-      amount: 250,
-    },
-  ];
-  title = 'Gemini Login';
 
-  requiredFileType:string = 'image/png' || 'image/jpeg';
+  requiredFileType: string = 'image/png' || 'image/jpeg';
   fileName = '';
 
   constructor(private http: HttpClient, private fileConversionService: FileConversionService) {
-    // this.initGemini();
   }
 
   onFileSelected(event: any) {
@@ -216,7 +182,6 @@ export class AppComponent {
       model: 'gemini-pro-vision', // or 'gemini-pro-vision'
       ...generationConfig,
     });
-    // Model initialisation missing for brevity
 
     try {
       let imageBase64 = await this.fileConversionService.convertToBase64(
@@ -228,12 +193,12 @@ export class AppComponent {
         console.error('Image conversion to Base64 failed.');
         return;
       }
-      // Model initialisation missing for brevity
+
       let prompt = [
         {
           inlineData: {
             mimeType: 'image/png',
-            data: file? file: imageBase64,
+            data: file ? file : imageBase64,
           },
         },
         {
@@ -251,7 +216,7 @@ export class AppComponent {
         model: 'gemini-pro', // or 'gemini-pro-vision'
         ...generationConfig,
       });
-      // Model initialisation missing for brevity
+
       prompt = [
         {
           text: 'Create a simple angular functional page with using Angular Material:' + this.imageDescription +
@@ -279,6 +244,7 @@ export class AppComponent {
 
   public parseFiles(files: string[]): void {
     let newTask = '';
+    // Split the files into pairs of two: name and content
     for (let i = 0; i < files.length; i += 2) {
       newTask += files[i] + files[i + 1] + '\n';
       this.formatedFiles.push(newTask);

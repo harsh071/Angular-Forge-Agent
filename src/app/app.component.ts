@@ -45,7 +45,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
-import { FormControl, FormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
 import { environment } from '../environments/environment.development';
 import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/http';
@@ -140,7 +140,6 @@ export class AppComponent {
   imageDescription = '';
   file: string;
   formatedFiles: string[] = [];
-
   requiredFileType: string = 'image/png' || 'image/jpeg';
   fileName = '';
 
@@ -209,7 +208,7 @@ export class AppComponent {
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
-      console.log(response);
+
       this.imageDescription = response.text();
 
       const model2 = genAI.getGenerativeModel({
@@ -219,13 +218,13 @@ export class AppComponent {
 
       prompt = [
         {
-          text: 'Create a simple angular functional page with using Angular Material:' + this.imageDescription +
+          text: 'Create a simple angular functional page with using Material Angular:' + this.imageDescription +
             + "Libraries:\
-          Angular Material from material.angular.io." +
+           Material Angular from material.angular.io." +
             "Constraints:\
-          Do not include any unnecessary dependencies apart from Material Angular" +
+          Do not include any unnecessary dependencies, must include Material Angular and all variables used in html implemented in typescript" +
             materialImports +
-            "Focus on achieving the core functionality with minimal code" +
+            "Focus on achieving the core functionality with minimal code, make sure all the files work and compile" +
             "Output Format:\
           Three separate JSON files:\
           app.component.ts (TypeScript file for the component)\

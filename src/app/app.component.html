@@ -1,17 +1,17 @@
-<div>
+<div class="content">
   <div class="margin">Please upload an image to replicate it in Material angular: </div>
-  
+
   <input type="file" class="file-input" (change)="onFileSelected($event)" #fileUpload>
   <div class="file-upload margin">
     {{fileName || "No file uploaded yet, click the button to upload a file."}}
-    <button mat-mini-fab color="primary" class="upload-btn" (click)="fileUpload.click()">
-      <mat-icon>attach_file</mat-icon>
-    </button>
   </div>
-
+  <button mat-flat-button color="primary" class="upload-btn" (click)="fileUpload.click()">
+    <mat-icon>attach_file</mat-icon>
+    Upload
+  </button>
   <div class="margin">{{imageDescription}}</div>
 
-  <div *ngFor="let item of formatedFiles" class="codes">
+  <div *ngFor="let item of geminiService.formatedFiles" class="codes">
     <div #textToCopy>
       <pre>{{item}}</pre>
     </div>

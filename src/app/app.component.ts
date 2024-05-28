@@ -1,3 +1,4 @@
+import { GeminiService } from './gemini.service';
 import { FileConversionService } from './file-conversion.service';
 import { Component } from '@angular/core';
 import { NgModule } from '@angular/core';
@@ -51,43 +52,7 @@ import { environment } from '../environments/environment.development';
 import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/http';
 import { Subscription, finalize } from 'rxjs';
 
-const materialImports: string[] = [
-  'MatAutocompleteModule',
-  'MatCheckboxModule',
-  'MatDatepickerModule',
-  'MatFormFieldModule',
-  'MatInputModule',
-  'MatRadioModule',
-  'MatSelectModule',
-  'MatSliderModule',
-  'MatSlideToggleModule',
-  'MatMenuModule',
-  'MatSidenavModule',
-  'MatToolbarModule',
-  'MatCardModule',
-  'MatDividerModule',
-  'MatExpansionModule',
-  'MatGridListModule',
-  'MatListModule',
-  'MatStepperModule',
-  'MatTabsModule',
-  'MatTreeModule',
-  'MatButtonModule',
-  'MatButtonToggleModule',
-  'MatBadgeModule',
-  'MatChipsModule',
-  'MatIconModule',
-  'MatProgressSpinnerModule',
-  'MatProgressBarModule',
-  'MatRippleModule',
-  'MatBottomSheetModule',
-  'MatDialogModule',
-  'MatSnackBarModule',
-  'MatTooltipModule',
-  'MatPaginatorModule',
-  'MatSortModule',
-  'MatTableModule',
-];
+
 
 @Component({
   selector: 'app-root',
@@ -139,118 +104,25 @@ const materialImports: string[] = [
 export class AppComponent {
   imageDescription = '';
   file: string;
-  formatedFiles: string[] = [];
   requiredFileType: string = 'image/png' || 'image/jpeg';
   fileName = '';
 
-  constructor(private http: HttpClient, private fileConversionService: FileConversionService) {
-  }
+  constructor(public geminiService: GeminiService) {}
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
 
     if (file) {
       this.fileName = file.name;
-      console.log(file)
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
         let base64data = reader.result as string;
         base64data = base64data.substring(base64data.indexOf(',') + 1)
-        this.initGemini(base64data);
+        this.geminiService.initGemini(base64data);
       };
     }
-  }
-
-  public async initGemini(file?: string) {
-    const genAI = new GoogleGenerativeAI(environment.API_KEY);
-    const generationConfig = {
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-        },
-      ],
-      temperature: 0.9,
-      top_p: 1,
-      top_k: 32,
-      maxOutputTokens: 100, // limit output
-    };
-
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-pro-vision', // or 'gemini-pro-vision'
-      ...generationConfig,
-    });
-
-    try {
-      let imageBase64 = await this.fileConversionService.convertToBase64(
-        'assets/goog.png'
-      );
-
-      // Check for successful conversion to Base64
-      if (typeof imageBase64 !== 'string') {
-        console.error('Image conversion to Base64 failed.');
-        return;
-      }
-
-      let prompt = [
-        {
-          inlineData: {
-            mimeType: 'image/png',
-            data: file ? file : imageBase64,
-          },
-        },
-        {
-          text: 'Explain what kind of a web page is shown in the image above.' +
-            'Be as descriptive as possible and include all the necessary details for gemini.',
-        },
-      ];
-
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-
-      this.imageDescription = response.text();
-
-      const model2 = genAI.getGenerativeModel({
-        model: 'gemini-pro', // or 'gemini-pro-vision'
-        ...generationConfig,
-      });
-
-      prompt = [
-        {
-          text: 'Create a simple angular functional page with using Material Angular:' + this.imageDescription +
-            + "Libraries:\
-           Material Angular from material.angular.io." +
-            "Constraints:\
-          Do not include any unnecessary dependencies, must include Material Angular and all variables used in html implemented in typescript" +
-            materialImports +
-            "Focus on achieving the core functionality with minimal code, make sure all the files work and compile" +
-            "Output Format:\
-          Three separate JSON files:\
-          app.component.ts (TypeScript file for the component)\
-          app.component.html (HTML file for the component template)\
-          app.component.css (CSS file for the component styles)",
-        },
-      ];
-
-      const result2 = await model2.generateContent(prompt);
-      const response2 = await result2.response;
-      this.parseFiles(response2.text().split('```'));
-    } catch (error) {
-      console.error('Error converting file to Base64', error);
-    }
-  }
-
-  public parseFiles(files: string[]): void {
-    let newTask = '';
-    // Split the files into pairs of two: name and content
-    for (let i = 0; i < files.length; i += 2) {
-      newTask += files[i] + files[i + 1] + '\n';
-      this.formatedFiles.push(newTask);
-      newTask = '';
-    }
-    console.log(this.formatedFiles)
-    this.formatedFiles = this.formatedFiles.slice(0, this.formatedFiles.length - 1);
   }
 
   public copyText(textElement: HTMLDivElement): void {

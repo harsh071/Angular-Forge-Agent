@@ -121,6 +121,9 @@ export class AppComponent {
         let base64data = reader.result as string;
         base64data = base64data.substring(base64data.indexOf(',') + 1)
         this.geminiService.initGemini(base64data);
+        this.geminiService.imageDescription$.subscribe((description) => {
+          this.imageDescription = description;
+        });
       };
     }
   }

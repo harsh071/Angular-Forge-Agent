@@ -1,16 +1,17 @@
-<div class="content">
-  <div class="margin">Please upload an image to replicate it in Material angular: </div>
+<div class="main">
+  <div class="content">
+    <div class="margin">Please upload an image to replicate it in Material angular: </div>
 
-  <input type="file" class="file-input" (change)="onFileSelected($event)" #fileUpload>
-  <div class="file-upload margin">
-    {{fileName || "No file uploaded yet, click the button to upload a file."}}
+    <input type="file" class="file-input" (change)="onFileSelected($event)" #fileUpload>
+    <div class="file-upload margin">
+      {{fileName || "No file uploaded yet, click the button to upload a file."}}
+    </div>
+    <button mat-flat-button color="primary" class="upload-btn" (click)="fileUpload.click()">
+      <mat-icon>attach_file</mat-icon>
+      Upload
+    </button>
+    <div class="margin">{{imageDescription}}</div>
   </div>
-  <button mat-flat-button color="primary" class="upload-btn" (click)="fileUpload.click()">
-    <mat-icon>attach_file</mat-icon>
-    Upload
-  </button>
-  <div class="margin">{{imageDescription}}</div>
-
   <div *ngFor="let item of geminiService.formatedFiles" class="codes">
     <div #textToCopy>
       <pre>{{item}}</pre>

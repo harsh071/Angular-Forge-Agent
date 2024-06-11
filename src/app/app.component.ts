@@ -123,6 +123,9 @@ export class AppComponent {
         this.geminiService.initGemini(base64data);
         this.geminiService.imageDescription$.subscribe((description) => {
           this.imageDescription = description;
+          //save imageDescription to local storage
+          localStorage.setItem('imageDescription', this.imageDescription);
+          console.log(localStorage.getItem('imageDescription'));
         });
       };
     }

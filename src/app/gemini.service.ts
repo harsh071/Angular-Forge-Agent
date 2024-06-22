@@ -8,19 +8,20 @@ import { FileConversionService } from './file-conversion.service';
 import { environment } from '../environments/environment.development';
 import { materialImports } from './material-imports';
 import { getPrompt } from './prompt';
+import { FirestoreService } from './firestore-service.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class GeminiService {
-  public imageDescription$: BehaviorSubject<string> = new BehaviorSubject<string>('create a google home page');
+  public imageDescription$: BehaviorSubject<string> = new BehaviorSubject<string>('');
   public imageDescription: string = '';
   public formatedFiles: string[] = [];
   public model;
   public genAI;
   public generationConfig;
 
-  constructor(private http: HttpClient, private fileConversionService: FileConversionService) {
+  constructor(private http: HttpClient, private fileConversionService: FileConversionService, public  firestoreService: FirestoreService) {
     this.genAI = new GoogleGenerativeAI(environment.API_KEY);
     this.generationConfig = {
       safetySettings: [
@@ -87,6 +88,9 @@ export class GeminiService {
 
       this.imageDescription = response.text();
       this.imageDescription$.next(this.imageDescription);
+      let randomNumber = Math.floor(Math.random() * 1000);
+      this.firestoreService.addData('items', 'document', { [randomNumber]: this.imageDescription });
+
       const model2 = this.genAI.getGenerativeModel({
         model: 'gemini-1.5-pro-001', // or 'gemini-pro-vision'
         ...this.generationConfig,

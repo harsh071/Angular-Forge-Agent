@@ -48,10 +48,11 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
-import { environment } from '../environments/environment.development';
+import { environment, firestoreConfig } from '../environments/environment.development';
 import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/http';
-import { Subscription, finalize } from 'rxjs';
-
+import { Firestore, collectionData, collection } from '@angular/fire/firestore';
+import { Observable, first } from 'rxjs';
+import { FirestoreService } from './firestore-service.service';
 
 
 @Component({
@@ -106,16 +107,20 @@ export class AppComponent {
   file: string;
   requiredFileType: string = 'image/png' || 'image/jpeg';
   fileName = '';
+  items$: Observable<any[]>;
 
-  constructor(public geminiService: GeminiService) {}
+  constructor(public geminiService: GeminiService, public firestore: Firestore, public firestoreService: FirestoreService) {
+    // this.items$ = collectionData(itemsCollection);
+    // this.items$.subscribe((items) => console.log(items));
+    firestoreService.addData('items', 'document', { capital: 'it' });
+  }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
 
     if (file) {
       this.fileName = file.name;
-
-      const reader = new FileReader();
+      const reader = new FileReader();  
       reader.readAsDataURL(file);
       reader.onload = () => {
         let base64data = reader.result as string;
@@ -123,6 +128,7 @@ export class AppComponent {
         this.geminiService.initGemini(base64data);
         this.geminiService.imageDescription$.subscribe((description) => {
           this.imageDescription = description;
+          let randomNumber = Math.floor(Math.random() * 1000);
           //save imageDescription to local storage
           localStorage.setItem('imageDescription', this.imageDescription);
           console.log(localStorage.getItem('imageDescription'));

@@ -12,10 +12,25 @@
     </button>
     <div class="margin">{{imageDescription}}</div>
   </div>
-  <div *ngFor="let item of geminiService.formatedFiles" class="codes">
+  <div *ngFor="let item of itemsCollection?.code" class="codes">
     <div #textToCopy>
       <pre>{{item}}</pre>
     </div>
     <button class="button" mat-flat-button color="warn" (click)="copyText(textToCopy)">Copy to Clipboard</button>
+  </div>
+  <div class="code-generated-list">
+    <ng-container *ngFor="let key of codeListKeys">
+      <mat-expansion-panel hideToggle>
+        <mat-expansion-panel-header>
+          <mat-panel-title> {{key}} </mat-panel-title>
+          <mat-panel-description></mat-panel-description>
+        </mat-expansion-panel-header>
+        <div *ngFor="let snippet of codeSnippets" class="code-snippet">
+          <h3>{{ snippet.filename }}</h3>
+          <pre><code [innerHTML]="snippet.content | highlight"></code></pre>
+        </div>
+        
+      </mat-expansion-panel>
+    </ng-container>
   </div>
 </div>

@@ -54,6 +54,15 @@ import { Firestore, collectionData, collection } from '@angular/fire/firestore';
 import { Observable, first } from 'rxjs';
 import { FirestoreService } from './firestore-service.service';
 
+interface AngularFile {
+  filename: string;
+  content: string;
+}
+
+interface CodeSnippet {
+  filename: string;
+  content: string;
+}
 
 @Component({
   selector: 'app-root',
@@ -107,31 +116,69 @@ export class AppComponent {
   file: string;
   requiredFileType: string = 'image/png' || 'image/jpeg';
   fileName = '';
-  items$: Observable<any[]>;
+  items$: Observable<any>;
+  codeList: any;
+  codeListKeys: any;
+  codeSnippets: CodeSnippet[] = [];
 
-  constructor(public geminiService: GeminiService, public firestore: Firestore, public firestoreService: FirestoreService) {
-    // this.items$ = collectionData(itemsCollection);
-    // this.items$.subscribe((items) => console.log(items));
-    firestoreService.addData('items', 'document', { capital: 'it' });
+  itemsCollection: any;
+
+  constructor(
+    public geminiService: GeminiService,
+    public firestore: Firestore,
+    public firestoreService: FirestoreService
+  ) {
+    firestoreService.addData('items', 'description-code', { capital: 'it' });
+    this.itemsCollection = this.firestoreService.getData(
+      'items',
+      'description-code'
+    );
+    this.firestoreService.itemsCollection.subscribe((data) => {
+      this.codeList = data;
+      this.codeListKeys = Object.keys(this.codeList);
+      console.log(JSON.parse(this.codeList['428']?.code[0].slice(5, -1)))
+    });
   }
+  
+  // parseAngularFiles(jsonData: string): AngularFile[] | null {
+  //   try {
+  // WORKS:       console.log(JSON.parse(this.codeList['428']?.code[0].slice(5, -1)))
+  //       // Remove the 'json' and extra line breaks from the beginning and the end of the string
+  //       jsonData = jsonData.trim().replace(/^json\\n/, '').replace(/\\n\\n$/, '');
+  //       console.log(typeof jsonData);
+  //       // Parse the JSON data
+  //       const parsedData = JSON.parse(jsonData);
+        
+  //       // Check if 'code' key exists and is an array
+  //       if (Array.isArray(parsedData.code)) {
+  //           return parsedData.code.map(file => ({
+  //               filename: file.filename,
+  //               content: file.content
+  //           }));
+  //       } else {
+  //           console.error('Invalid format: JSON does not contain \'code\' array');
+  //           return null;
+  //       }
+  //   } catch (error) {
+  //       console.error('Error parsing JSON', error);
+  //       return null;
+  //   }
+  // }
 
   onFileSelected(event: any) {
     const file: File = event.target.files[0];
 
     if (file) {
       this.fileName = file.name;
-      const reader = new FileReader();  
+      const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => {
         let base64data = reader.result as string;
-        base64data = base64data.substring(base64data.indexOf(',') + 1)
+        base64data = base64data.substring(base64data.indexOf(',') + 1);
         this.geminiService.initGemini(base64data);
         this.geminiService.imageDescription$.subscribe((description) => {
           this.imageDescription = description;
-          let randomNumber = Math.floor(Math.random() * 1000);
           //save imageDescription to local storage
-          localStorage.setItem('imageDescription', this.imageDescription);
-          console.log(localStorage.getItem('imageDescription'));
         });
       };
     }

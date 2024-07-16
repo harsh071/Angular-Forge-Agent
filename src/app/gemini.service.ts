@@ -88,8 +88,6 @@ export class GeminiService {
 
       this.imageDescription = response.text();
       this.imageDescription$.next(this.imageDescription);
-      let randomNumber = Math.floor(Math.random() * 1000);
-      this.firestoreService.addData('items', 'document', { [randomNumber]: this.imageDescription });
 
       const model2 = this.genAI.getGenerativeModel({
         model: 'gemini-1.5-pro-001', // or 'gemini-pro-vision'
@@ -227,10 +225,16 @@ export class GeminiService {
             materialImports +
             `Focus on achieving the core functionality with minimal code, make sure all the files work and compile
             ### Output Format: ###
-          Three separate JSON files in json output as such filename and code:
+          The Output should not contain any extra space or new line characters
+          All strings must be double quotes, not single quotes and not backticks
+          Three separate files in json output as such filename and code:
           app.component.ts (TypeScript file for the component)
           app.component.html (HTML file for the component template)
-          app.component.css (CSS file for the component styles)`,
+          app.component.css (CSS file for the component styles)
+
+          THE OUTPUT HAS TO BE in the following format, the whole output shoule be parsed as JSON string, there should be no errors on JSON.parse:
+          [{filename: 'app.component.ts', content: '...'}, {filename: 'app.component.html', content: '...'}, {filename: 'app.component.css', content: '...'}]
+          `,
         },
       ];
 
@@ -252,5 +256,11 @@ export class GeminiService {
     }
 
     this.formatedFiles = this.formatedFiles.slice(0, this.formatedFiles.length - 1);
+    let randomNumber = Math.floor(Math.random() * 1000);
+    this.firestoreService.addData('items', 'description-code', { [randomNumber]: {
+      description: this.imageDescription,
+      code: this.formatedFiles,
+    }});
+
   }
 }

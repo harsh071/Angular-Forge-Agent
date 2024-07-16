@@ -25,9 +25,11 @@
           <mat-panel-title> {{key}} </mat-panel-title>
           <mat-panel-description></mat-panel-description>
         </mat-expansion-panel-header>
+        {{ codeSnippets | json}}
         <div *ngFor="let snippet of codeSnippets" class="code-snippet">
           <h3>{{ snippet.filename }}</h3>
-          <pre><code [innerHTML]="snippet.content | highlight"></code></pre>
+          {{ snippet.content}}
+          <div [innerHTML]="snippet.content"></div>
         </div>
         
       </mat-expansion-panel>

@@ -128,7 +128,7 @@ export class AppComponent {
     public firestore: Firestore,
     public firestoreService: FirestoreService
   ) {
-    firestoreService.addData('items', 'description-code', { capital: 'it' });
+    // firestoreService.addData('items', 'description-code', { capital: 'it' });
     this.itemsCollection = this.firestoreService.getData(
       'items',
       'description-code'
@@ -136,7 +136,18 @@ export class AppComponent {
     this.firestoreService.itemsCollection.subscribe((data) => {
       this.codeList = data;
       this.codeListKeys = Object.keys(this.codeList);
-      console.log(JSON.parse(this.codeList['428']?.code[0].slice(5, -1)))
+      // use the following to get the code snippets in code
+      // console.log(JSON.parse(this.codeList['428']?.code[0].slice(5, -1)))
+      this.codeListKeys.forEach((key) => {
+        let code = JSON.parse(this.codeList[key].code[0].slice(5, -1));
+        console.log(this.codeList[key], key, this.codeList)
+        console.log(code)
+        this.codeSnippets.push({
+          filename: code.filename,
+          content: code.content,
+        });
+      });
+
     });
   }
   

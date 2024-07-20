@@ -16,7 +16,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 // Material Navigation
-import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
 // Material Layout
@@ -36,12 +35,13 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatRippleModule } from '@angular/material/core';
+import { MatNativeDateModule, MatRippleModule } from '@angular/material/core';
 // Material Popups & Modals
 import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
 // Material Data tables
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
@@ -53,6 +53,7 @@ import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/htt
 import { Firestore, collectionData, collection } from '@angular/fire/firestore';
 import { Observable, first } from 'rxjs';
 import { FirestoreService } from './firestore-service.service';
+import { DynamicContentComponent } from './dynamic-content.component';
 
 interface AngularFile {
   filename: string;
@@ -68,6 +69,8 @@ interface CodeSnippet {
   selector: 'app-root',
   standalone: true,
   imports: [
+    DynamicContentComponent,
+    MatNativeDateModule,
     CommonModule,
     FormsModule,
     MatAutocompleteModule,
@@ -122,7 +125,78 @@ export class AppComponent {
   codeSnippets: CodeSnippet[] = [];
 
   itemsCollection: any;
+  code = `<mat-toolbar color="primary">
+  <span class="logo">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/Wikipedia-logo-v2.svg/200px-Wikipedia-logo-v2.svg.png" alt="Wikipedia Logo">
+    Wikipedia The Free Encyclopedia
+  </span>
+  <span class="search-bar">
+    <mat-form-field appearance="outline">
+      <input matInput placeholder="Search Wikipedia">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </span>
+  <span class="user-options">
+    <button mat-button>Create account</button>
+    <button mat-button>Log in</button>
+    <mat-icon>more_vert</mat-icon>
+  </span>
+</mat-toolbar>
 
+<div class="content">
+  <div class="banner">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Compass_Rose_English.svg/120px-Compass_Rose_English.svg.png" alt="Compass Image">
+    <div>
+      <h2>Wikidata Contest</h2>
+      <p>Coordinate Me</p>
+      <p>May 2024</p>
+    </div>
+  </div>
+
+  <mat-tab-group>
+    <mat-tab label="Main Page">
+      <div class="welcome-message">
+        <h1>Welcome to Wikipedia, the free encyclopedia that anyone can edit.</h1>
+        <p>6,827,785 articles in English</p>
+      </div>
+
+      <mat-card class="featured-article">
+        <mat-card-header>
+          <mat-card-title>From today's featured article</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/SMS_Lothringen_1916.jpg/320px-SMS_Lothringen_1916.jpg" alt="SMS Lothringen">
+          <p>Content about SMS Lothringen...</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="in-the-news">
+        <mat-card-header>
+          <mat-card-title>In the news</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <ul>
+            <li>Landslide in Papua New Guinea</li>
+            <li>European Union passes Artificial Intelligence Act</li>
+            <li>
+              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Ebrahim_Raisi_2022.jpg/220px-Ebrahim_Raisi_2022.jpg" alt="Ebrahim Raisi">
+              Helicopter crash in Iran
+            </li>
+          </ul>
+        </mat-card-content>
+      </mat-card>
+    </mat-tab>
+    <mat-tab label="Talk">Content for Talk tab</mat-tab>
+  </mat-tab-group>
+
+  <div class="page-tools">
+    <a href="#">Read</a>
+    <a href="#">View source</a>
+    <a href="#">View history</a>
+    <a href="#">Tools</a>
+  </div>
+</div>
+`
   constructor(
     public geminiService: GeminiService,
     public firestore: Firestore,

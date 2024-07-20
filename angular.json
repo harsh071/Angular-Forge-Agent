@@ -17,6 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "aot": false,
             "outputPath": "dist/webapp",
             "index": "src/index.html",
             "browser": "src/main.ts",

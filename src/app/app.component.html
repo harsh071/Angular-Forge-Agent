@@ -5,7 +5,7 @@
       <button mat-menu-item>Day</button>
       <button mat-menu-item>Month</button>
       <button mat-menu-item>Year</button>
-    </mat-menu>
+    </mat-menu> 
     <input type="file" class="file-input" (change)="onFileSelected($event)" #fileUpload>
     <div class="file-upload margin">
       {{fileName || "No file uploaded yet, click the button to upload a file."}}
@@ -15,10 +15,6 @@
       Upload
     </button>
     <div class="margin">{{imageDescription}}</div>
-    <app-dynamic-content [dynamicHtml]="code">ad</app-dynamic-content>
-    <!-- <button (click)="updateHtmlString('<mat-toolbar color=\'primary\'><span>DesignShare</span><span class=\'spacer\'></span><button mat-button>New Generations</button><button mat-button>Featured</button></mat-toolbar><div class=\'container\'><mat-grid-list cols=\'3\' rowHeight=\'350px\'><mat-grid-tile *ngFor=\'let component of designComponents\'><mat-card class=\'component-card\'><img mat-card-image [src]=\'component.imageUrl\' alt=\'Component Preview\'><mat-card-content><p>{{ component.description }}</p></mat-card-content><mat-card-actions><img [src]=\'component.userAvatar\' class=\'avatar\'><span class=\'timestamp\'>{{ component.timeAgo }}</span></mat-card-actions></mat-card></mat-grid-tile></mat-grid-list></div>')">Update HTML</button>
-    <button (click)="fetchHtmlFromApi()">Fetch HTML from API</button> -->
-
   </div>
   <div *ngFor="let item of itemsCollection?.code" class="codes">
     <div #textToCopy>
@@ -27,19 +23,13 @@
     <button class="button" mat-flat-button color="warn" (click)="copyText(textToCopy)">Copy to Clipboard</button>
   </div>
   <div class="code-generated-list">
-    <ng-container *ngFor="let key of codeListKeys">
+    <ng-container *ngFor="let code of codeSnippets">
       <mat-expansion-panel hideToggle>
         <mat-expansion-panel-header>
-          <mat-panel-title> {{key}} </mat-panel-title>
+          <mat-panel-title>{{code.filename}}</mat-panel-title>
           <mat-panel-description></mat-panel-description>
         </mat-expansion-panel-header>
-        {{ codeSnippets | json}}
-        <div *ngFor="let snippet of codeSnippets" class="code-snippet">
-          <h3>{{ snippet.filename }}</h3>
-          {{ snippet.content}}
-          <div [innerHTML]="snippet.content"></div>
-        </div>
-        
+        <app-dynamic-content [dynamicHtml]="code.content[1].content" [dynamicCss]="code.content[2].content"></app-dynamic-content>
       </mat-expansion-panel>
     </ng-container>
   </div>

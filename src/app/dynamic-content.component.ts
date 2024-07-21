@@ -1,9 +1,48 @@
-import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+// Material Form Controls
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSliderModule } from '@angular/material/slider';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+// Material Navigation
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatButtonModule } from '@angular/material/button';
-import { MatGridListModule } from '@angular/material/grid-list';
+// Material Layout
 import { MatCardModule } from '@angular/material/card';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatGridListModule } from '@angular/material/grid-list';
+import { MatListModule } from '@angular/material/list';
+import { MatStepperModule } from '@angular/material/stepper';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTreeModule } from '@angular/material/tree';
+// Material Buttons & Indicators
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatNativeDateModule, MatRippleModule } from '@angular/material/core';
+// Material Popups & Modals
+import { MatBottomSheetModule } from '@angular/material/bottom-sheet';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatMenuModule } from '@angular/material/menu';
+// Material Data tables
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-dynamic-content',
@@ -12,13 +51,15 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class DynamicContentComponent implements OnInit {
   @Input() dynamicHtml: string;
+  @Input() dynamicCss: string;
 
   @ViewChild('dynamicContentContainer', { read: ViewContainerRef, static: true }) dynamicContentContainer: ViewContainerRef;
 
-  constructor(
+  constructor(private viewContainerRef: ViewContainerRef, 
+    private envInjector: EnvironmentInjector,
     private compiler: Compiler,
     private injector: Injector,
-    private moduleRef: NgModuleRef<any>
+    private moduleRef: NgModuleRef<any>,
   ) {}
 
   ngOnInit(): void {
@@ -27,18 +68,71 @@ export class DynamicContentComponent implements OnInit {
 
   async renderDynamicContent() {
     const template = `<div>${this.dynamicHtml}</div>`;
+    const styles = `:host {
+      ${this.dynamicCss}
+    }`
 
-    const tmpCmp = Component({ template: template })(class {});
+    const tmpCmp = Component({ template: template, styles: [styles] })(class {});
     const tmpModule = NgModule({
       declarations: [tmpCmp],
-      imports: [CommonModule, MatToolbarModule, MatButtonModule, MatGridListModule, MatCardModule],
+      imports: [
+        CommonModule, 
+        MatToolbarModule, 
+        MatButtonModule, 
+        MatGridListModule, 
+        MatCardModule,
+        MatNativeDateModule,
+        CommonModule,
+        FormsModule,
+        MatAutocompleteModule,
+        MatCheckboxModule,
+        MatDatepickerModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatRadioModule,
+        MatSelectModule,
+        MatSliderModule,
+        MatSlideToggleModule,
+        MatMenuModule,
+        MatSidenavModule,
+        MatToolbarModule,
+        MatCardModule,
+        MatDividerModule,
+        MatExpansionModule,
+        MatGridListModule,
+        MatListModule,
+        MatStepperModule,
+        MatTabsModule,
+        MatTreeModule,
+        MatButtonModule,
+        MatButtonToggleModule,
+        MatBadgeModule,
+        MatChipsModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
+        MatProgressBarModule,
+        MatRippleModule,
+        MatBottomSheetModule,
+        MatDialogModule,
+        MatSnackBarModule,
+        MatTooltipModule,
+        MatPaginatorModule,
+        MatSortModule,
+        MatTableModule,
+      ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA]
     })(class {});
 
     const moduleFactory = await this.compiler.compileModuleAsync(tmpModule);
-    const moduleRef = moduleFactory.create(this.injector);
+    // const moduleRef = moduleFactory.create(this.injector);
 
-    const compFactory = moduleRef.componentFactoryResolver.resolveComponentFactory(tmpCmp);
-    this.dynamicContentContainer.createComponent(compFactory);
+    const componentRef: ComponentRef<any> = this.viewContainerRef.createComponent(
+      tmpCmp,
+      { environmentInjector: this.envInjector } // Optional, for dependency injection
+    );
+
+    // const compFactory = moduleRef.componentFactoryResolver.resolveComponentFactory(tmpCmp);
+    // this.dynamicContentContainer.createComponent(compFactory);
+    
   }
 }

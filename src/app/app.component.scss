@@ -1,5 +1,106 @@
 .main{
   height: 100%;
+
+  .logo {
+    font-weight: bold;
+    margin-right: 16px;
+  }
+  
+  mat-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  mat-sidenav-container {
+    height: calc(100vh - 64px);
+  }
+  
+  mat-sidenav {
+    width: 250px;
+  }
+  
+  .content {
+    display: flex;
+    padding: 16px;
+  }
+  
+  .question-list {
+    flex: 1;
+    margin-right: 16px;
+  }
+  
+  .question {
+    margin-bottom: 16px;
+  }
+  
+  .vote-count {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 8px 16px;
+    background-color: lightgray;
+  }
+  
+  .question-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  
+  .answer-count,
+  .view-count {
+    font-size: 12px;
+    color: gray;
+    margin-right: 16px;
+  }
+  
+  .question-title {
+    margin: 0;
+  }
+  
+  .tags {
+    margin-bottom: 8px;
+  }
+  
+  .tag {
+    background-color: lightblue;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-right: 4px;
+  }
+  
+  .asker {
+    display: flex;
+    align-items: center;
+  }
+  
+  .asker .mat-icon {
+    margin-right: 8px;
+  }
+  
+  .asker .username {
+    font-weight: bold;
+  }
+  
+  .asker .reputation {
+    font-size: 12px;
+    color: gray;
+    margin: 0 8px;
+  }
+  
+  .asker .time-ago {
+    font-size: 12px;
+    color: gray;
+  }
+  
+  .sidebar {
+    width: 300px;
+  }
+  
+  .collective {
+    margin-bottom: 16px;
+  }
+  
   
   .content {
     height: 100%;

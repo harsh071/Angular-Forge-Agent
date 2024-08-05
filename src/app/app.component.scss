@@ -6,6 +6,16 @@
     margin-right: 16px;
   }
   
+  .title {
+    display: flex;
+    margin: 10px auto;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 600;
+  }
+
   mat-toolbar {
     display: flex;
     justify-content: space-between;
@@ -103,7 +113,7 @@
   
   
   .content {
-    height: 100%;
+    height: fit-content;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -170,10 +180,12 @@
   }
 
   .code-generated-list {
-    width: 100%;
+    width: 80%;
     display: flex;
     flex-direction: column;
-
+    justify-content: center;
+    margin: auto;
+    
     .scroll {
       overflow: auto;
     }

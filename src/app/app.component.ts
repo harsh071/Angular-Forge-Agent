@@ -48,7 +48,6 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
-import { environment, firestoreConfig } from '../environments/environment.development';
 import { HttpClient, HttpClientModule, HttpEventType } from '@angular/common/http';
 import { Firestore, collectionData, collection } from '@angular/fire/firestore';
 import { Observable, first } from 'rxjs';

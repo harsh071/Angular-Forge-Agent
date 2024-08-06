@@ -5,7 +5,7 @@ import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/ge
 
 import { FileConversionService } from './file-conversion.service';
 
-import { environment } from '../environments/environment.development';
+import { environment } from '../environments/environment';
 import { materialImports } from './material-imports';
 import { getPrompt } from './prompt';
 import { FirestoreService } from './firestore-service.service';

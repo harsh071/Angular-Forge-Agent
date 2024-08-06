@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "libgenui",
+    "staging": "libgenui"
+  },
+  "targets": {},
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
+}

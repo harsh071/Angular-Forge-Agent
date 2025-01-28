@@ -1,15 +1,17 @@
-import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
 import { Injectable } from '@angular/core';
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory, GenerativeModel } from '@google/generative-ai';
-
-import { FileConversionService } from './file-conversion.service';
-
+import {
+  GoogleGenerativeAI,
+  HarmCategory,
+  HarmBlockThreshold,
+  GenerativeModel,
+  EnhancedGenerateContentResponse,
+} from '@google/generative-ai';
+import { Observable, BehaviorSubject, from } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../environments/environment';
-import { materialImports } from './material-imports';
-import { getPrompt } from './prompt';
 import { FirestoreService } from './firestore-service.service';
 
+// Add interfaces
 interface GeneratedFile {
   filename: string;
   content: string;
@@ -21,259 +23,189 @@ interface WebpageDescription {
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class GeminiService {
-  private readonly MODEL_NAME = 'gemini-1.5-pro-001';
-  private readonly MAX_RETRIES = 3;
-  
-  public imageDescription$: BehaviorSubject<string> = new BehaviorSubject<string>('');
-  public formatedFiles: string[] = [];
-  private model: GenerativeModel;
   private genAI: GoogleGenerativeAI;
+  private model: GenerativeModel;
+  private visionModel: GenerativeModel;
+  
+  // Add BehaviorSubject for image description
+  private imageDescriptionSubject = new BehaviorSubject<string>('');
+  imageDescription$ = this.imageDescriptionSubject.asObservable();
+  
+  // Add property for formatted files
+  formatedFiles: string[] = [];
 
-  constructor(
-    private readonly http: HttpClient,
-    private readonly fileConversionService: FileConversionService,
-    private readonly firestoreService: FirestoreService
-  ) {
+  constructor(private firestoreService: FirestoreService) {
+    // Replace with your actual API key
     this.genAI = new GoogleGenerativeAI(environment.firebase.apiKey);
-    this.model = this.initializeModel();
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    this.visionModel = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   }
 
-  private initializeModel(): GenerativeModel {
-    const generationConfig = {
-      safetySettings: [
-        {
-          category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-          threshold: HarmBlockThreshold.BLOCK_LOW_AND_ABOVE,
-        },
-      ],
-      maxOutputTokens: 8192,
-      temperature: 0.9,
-      topP: 0.95,
-    };
+  private readonly ANGULAR_CODE_PROMPT = `You are an expert Angular developer. Generate clean, modern, and well-structured Angular code based on the following requirements. 
+  Include all necessary imports and ensure the code follows Angular best practices. Format the response as valid TypeScript/HTML/SCSS code only, without any explanations or markdown.
+  Return the code as an array of objects with 'filename' and 'content' properties in JSON format. Example:
+  [{
+    "filename": "component.ts",
+    "content": "// TypeScript code here"
+  },
+  {
+    "filename": "component.html",
+    "content": "<!-- HTML code here -->"
+  }]`;
 
-    return this.genAI.getGenerativeModel({
-      model: this.MODEL_NAME,
-      ...generationConfig,
-    });
-  }
-
-  public async initGemini(file?: string): Promise<void> {
+  async initGemini(input: string, isTextPrompt: boolean = false): Promise<void> {
     try {
-      const imageBase64 = await this.fileConversionService.convertToBase64('assets/goog.png');
-      
-      if (!imageBase64 || typeof imageBase64 !== 'string') {
-        throw new Error('Image conversion to Base64 failed');
+      let result;
+      if (isTextPrompt) {
+        result = await this.model.generateContent(this.ANGULAR_CODE_PROMPT + '\n' + input);
+      } else {
+        const imageData = {
+          inlineData: {
+            data: input,
+            mimeType: 'image/jpeg'
+          }
+        };
+        
+        result = await this.visionModel.generateContent([
+          this.ANGULAR_CODE_PROMPT,
+          imageData
+        ]);
       }
 
-      const imageDescription = await this.generateImageDescription(file || imageBase64);
-      const generatedCode = await this.generateAngularCode(imageDescription);
+      const response = await result.response;
+      const text = response.text();
       
-      await this.saveToFirestore(imageDescription, generatedCode);
+      if (!isTextPrompt) {
+        this.imageDescriptionSubject.next(text);
+      }
+
+      // Parse the generated code and save to Firestore
+      try {
+        const cleanedText = this.cleanGeneratedCode(text);
+        console.log('Cleaned text:', cleanedText);
+        
+        const parsedFiles = this.parseGeneratedFiles(cleanedText);
+        console.log('Parsed files:', parsedFiles);
+        
+        if (parsedFiles && parsedFiles.length > 0) {
+          this.formatedFiles = [JSON.stringify(parsedFiles, null, 2)];
+          await this.saveToFirestore(
+            isTextPrompt ? input : text,
+            parsedFiles
+          );
+          console.log('Successfully processed and saved files:', parsedFiles);
+        } else {
+          console.error('Failed to parse generated files. Response format may be incorrect:', cleanedText);
+          throw new Error('Failed to parse generated files');
+        }
+      } catch (error) {
+        console.error('Error processing generated files:', error);
+        throw error;
+      }
     } catch (error) {
       console.error('Error in initGemini:', error);
       throw error;
     }
   }
 
-  private async generateImageDescription(imageData: string): Promise<string> {
-    const prompt = [
-      {
-        inlineData: {
-          mimeType: 'image/png',
-          data: imageData,
-        },
-      },
-      {
-        text: `Analyze the webpage shown in the image and provide an EXACT, pixel-perfect description that would allow recreating it identically. Focus on precise details:
-
-1. Exact Layout Measurements:
-   - Precise pixel dimensions for all elements
-   - Exact positioning and coordinates
-   - Specific margins, padding, and spacing values
-   - Grid/flex specifications with exact values
-   - Responsive breakpoints if visible
-
-2. Detailed Visual Specifications:
-   - Exact hex color codes for all elements
-   - Complete typography details (font family, size, weight, line height)
-   - Border specifications (width, style, color)
-   - Shadow effects (offset, blur, spread, color)
-   - Opacity and overlay values
-   - Image dimensions and aspect ratios
-
-3. Component-Specific Details:
-   - Button dimensions and states (hover, active, disabled)
-   - Input field specifications
-   - Icon sizes and styles
-   - List item spacing and styling
-   - Card/container border-radius and effects
-   - Navigation item styling and spacing
-
-4. Content and Text:
-   - Exact text content
-   - Text alignment and transformation
-   - Link styling and states
-   - List style specifications
-   - Content padding and margins
-
-5. Interactive Elements:
-   - Hover state colors and transitions
-   - Animation specifications (timing, easing)
-   - Form element styling
-   - Dropdown/menu specifications
-   - Modal/dialog styling if present
-
-Please provide a structured JSON response that captures EVERY visual detail in this format:
-{
-  "layout": {
-    "header": {
-      "height": "exact_px",
-      "padding": "exact_values",
-      "elements": [
-        {
-          "type": "element_type",
-          "dimensions": {"width": "px", "height": "px"},
-          "position": {"top": "px", "left": "px"},
-          "styling": {
-            "backgroundColor": "#exact_hex",
-            "fontSize": "px",
-            "fontFamily": "exact_font",
-            "margin": "exact_values",
-            "padding": "exact_values"
-          }
-        }
-      ]
-    },
-    "mainContent": { similar_detailed_structure },
-    "sidebar": { similar_detailed_structure },
-    "footer": { similar_detailed_structure }
-  },
-  "visualElements": {
-    "colorPalette": {
-      "primary": "#exact_hex",
-      "secondary": "#exact_hex",
-      "background": "#exact_hex",
-      "text": "#exact_hex"
-    },
-    "typography": {
-      "headings": {
-        "h1": {"size": "px", "weight": "value", "lineHeight": "value", "font": "exact_font"},
-        "h2": {similar_structure}
-      },
-      "body": {similar_structure}
-    }
-  },
-  "interactiveComponents": {
-    "buttons": {
-      "primary": {
-        "default": {detailed_styles},
-        "hover": {detailed_styles},
-        "active": {detailed_styles}
-      }
-    },
-    "inputs": {detailed_styles},
-    "dropdowns": {detailed_styles}
-  }
-}`
-      },
-    ];
-
-    const result = await this.model.generateContent(prompt);
-    const response = await result.response;
-    const description = response.text();
-    
-    this.imageDescription$.next(description);
-    return description;
-  }
-
-  private async generateAngularCode(description: string): Promise<GeneratedFile[]> {
-    const prompt = [{
-      text: `Create an Angular Material implementation based on this description: ${description}
-
-Requirements:
-1. Use Angular Material components
-2. Implement responsive design
-3. Follow Angular best practices
-4. Include proper TypeScript typing
-5. Use Material theming
-
-The response MUST be a valid JSON array exactly matching this structure (including proper escaping):
-[
-  {
-    "filename": "app.component.ts",
-    "content": "import { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.scss']\n})\nexport class AppComponent {\n  // Your component logic here\n}"
-  },
-  {
-    "filename": "app.component.html",
-    "content": "<mat-toolbar color=\\"primary\\">\n  <!-- Your template here -->\n</mat-toolbar>"
-  },
-  {
-    "filename": "app.component.scss",
-    "content": "/* Your styles here */\n\n.container {\n  // Your SCSS styles\n}"
-  }
-]
-
-Important formatting rules:
-1. All strings must use escaped double quotes (\\"example\\")
-2. Use proper line breaks with \\n
-3. The entire response must be valid JSON that can be parsed with JSON.parse()
-4. Include all necessary Angular Material imports and components
-5. Ensure proper component structure with TypeScript decorators
-6. Include responsive SCSS styles
-7. Follow the exact structure of the example above
-
-Available Material imports:
-${materialImports}`
-    }];
-
+  private parseGeneratedFiles(text: string): GeneratedFile[] | null {
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const responseText = response.text();
-      
-      // Validate JSON structure
-      let parsedResponse: GeneratedFile[];
+      // First try to parse the entire text as JSON
       try {
-        parsedResponse = JSON.parse(responseText);
-      } catch (error) {
-        console.error('Failed to parse LLM response as JSON:', error);
-        throw new Error('Generated code is not in valid JSON format');
-      }
-
-      // Validate response structure
-      if (!Array.isArray(parsedResponse)) {
-        throw new Error('Generated code must be an array');
-      }
-
-      const requiredFiles = ['app.component.ts', 'app.component.html', 'app.component.scss'];
-      const missingFiles = requiredFiles.filter(
-        file => !parsedResponse.some(item => item.filename === file)
-      );
-
-      if (missingFiles.length > 0) {
-        throw new Error(`Missing required files: ${missingFiles.join(', ')}`);
-      }
-
-      // Validate each file has required properties
-      parsedResponse.forEach(file => {
-        if (!file.filename || !file.content || typeof file.content !== 'string') {
-          throw new Error(`Invalid file structure for ${file.filename}`);
+        const directParse = JSON.parse(text);
+        if (Array.isArray(directParse) && directParse.length > 0 && 'filename' in directParse[0]) {
+          return directParse;
         }
-      });
+      } catch (e) {
+        // If direct parse fails, continue with substring extraction
+      }
 
-      return parsedResponse;
+      // Find the JSON array in the text
+      const matches = text.match(/\[\s*\{\s*"filename"[\s\S]*\}\s*\]/g);
+      if (matches && matches.length > 0) {
+        const jsonStr = matches[0];
+        const parsed = JSON.parse(jsonStr);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+
+      // If no valid JSON array found, return null
+      return null;
     } catch (error) {
-      console.error('Error generating Angular code:', error);
-      throw error;
+      console.error('Error parsing generated files:', error);
+      console.error('Text being parsed:', text);
+      return null;
     }
+  }
+
+  private async generateContent(prompt: string): Promise<string> {
+    const result = await this.model.generateContent(this.ANGULAR_CODE_PROMPT + '\n' + prompt);
+    const response = await result.response;
+    return response.text();
+  }
+
+  private async generateContentFromImage(
+    image: File,
+    prompt: string
+  ): Promise<string> {
+    const imageData = await this.fileToGenerativePart(image);
+    const result = await this.visionModel.generateContent([
+      this.ANGULAR_CODE_PROMPT + '\n' + prompt,
+      imageData,
+    ]);
+    const response = await result.response;
+    return response.text();
+  }
+
+  private async fileToGenerativePart(file: File) {
+    const base64EncodedDataPromise = new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          const base64Encoded = reader.result.split(',')[1];
+          resolve(base64Encoded);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    const base64EncodedData = await base64EncodedDataPromise;
+    return {
+      inlineData: {
+        data: base64EncodedData,
+        mimeType: file.type,
+      },
+    };
+  }
+
+  generateAngularCode(prompt: string): Observable<string> {
+    return from(this.generateContent(prompt));
+  }
+
+  generateAngularCodeFromImage(
+    image: File,
+    prompt: string
+  ): Observable<string> {
+    return from(this.generateContentFromImage(image, prompt));
+  }
+
+  // Helper method to validate and clean generated code
+  private cleanGeneratedCode(code: string): string {
+    // Remove any markdown code block indicators
+    code = code.replace(/```(typescript|html|scss|css)?\n/g, '');
+    code = code.replace(/```\n?/g, '');
+    // Remove any leading/trailing whitespace
+    code = code.trim();
+    return code;
   }
 
   private async saveToFirestore(description: string, files: GeneratedFile[]): Promise<void> {
     try {
-      const randomId = Math.floor(Math.random() * 1000).toString();
+      const randomId = Math.floor(Math.random() * 1000000).toString(); // Increased range for better uniqueness
       
       const data: WebpageDescription = {
         description,
@@ -287,7 +219,7 @@ ${materialImports}`
       console.log('Successfully saved to Firestore:', {
         collectionId: 'items',
         documentId: 'description-code',
-        data: data
+        data
       });
     } catch (error: any) {
       console.error('Error saving to Firestore:', error);

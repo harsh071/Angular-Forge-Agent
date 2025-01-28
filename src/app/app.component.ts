@@ -140,6 +140,7 @@ export class AppComponent implements OnInit {
   selectedFile: GeneratedFile | null = null;
   isLoading: boolean = false;
   error: string | null = null;
+  textPrompt: string = '';
 
   constructor(
     public geminiService: GeminiService,
@@ -408,5 +409,25 @@ export class AppComponent implements OnInit {
           this.error = 'Error loading saved code';
         }
       });
+  }
+
+  public async handleTextPrompt(): Promise<void> {
+    if (!this.textPrompt.trim()) {
+      this.error = 'Please enter a text description';
+      return;
+    }
+
+    this.isLoading = true;
+    this.error = null;
+    
+    try {
+      await this.geminiService.initGemini(this.textPrompt, true);
+      this.textPrompt = ''; // Clear the input after successful generation
+    } catch (error) {
+      console.error('Error processing text prompt:', error);
+      this.error = 'Failed to process text prompt. Please try again.';
+    } finally {
+      this.isLoading = false;
+    }
   }
 }

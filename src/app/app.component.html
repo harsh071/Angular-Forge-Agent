@@ -8,22 +8,42 @@
       <div class="tab-content">
         <mat-card class="upload-card">
           <mat-card-header>
-            <mat-card-title>Upload Screenshot</mat-card-title>
+            <mat-card-title>Upload Screenshot or Enter Text Prompt</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <div class="file-upload">
-              <input type="file" 
-                     accept="image/*" 
-                     (change)="handleFileUpload($event)" 
-                     #fileInput 
-                     [style.display]="'none'">
-              <button mat-raised-button 
-                      color="primary" 
-                      (click)="fileInput.click()"
-                      [disabled]="isLoading">
-                <mat-icon>upload</mat-icon>
-                Upload Screenshot
-              </button>
+            <div class="input-options">
+              <div class="file-upload">
+                <input type="file" 
+                       accept="image/*" 
+                       (change)="handleFileUpload($event)" 
+                       #fileInput 
+                       [style.display]="'none'">
+                <button mat-raised-button 
+                        color="primary" 
+                        (click)="fileInput.click()"
+                        [disabled]="isLoading">
+                  <mat-icon>upload</mat-icon>
+                  Upload Screenshot
+                </button>
+              </div>
+
+              <div class="text-prompt">
+                <mat-form-field appearance="fill" class="full-width">
+                  <mat-label>Enter your webpage description</mat-label>
+                  <textarea matInput
+                           [(ngModel)]="textPrompt"
+                           placeholder="Describe the webpage you want to create..."
+                           [disabled]="isLoading"
+                           rows="4"></textarea>
+                </mat-form-field>
+                <button mat-raised-button 
+                        color="accent"
+                        (click)="handleTextPrompt()"
+                        [disabled]="isLoading || !textPrompt">
+                  <mat-icon>description</mat-icon>
+                  Generate from Text
+                </button>
+              </div>
             </div>
 
             <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>

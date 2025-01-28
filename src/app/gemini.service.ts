@@ -87,43 +87,96 @@ export class GeminiService {
         },
       },
       {
-        text: `Analyze and describe the webpage shown in the image with the following structure:
+        text: `Analyze the webpage shown in the image and provide an EXACT, pixel-perfect description that would allow recreating it identically. Focus on precise details:
 
-1. Layout Overview:
-   - Header elements
-   - Main content structure
-   - Navigation components
-   - Sidebar presence
-   - Footer layout
+1. Exact Layout Measurements:
+   - Precise pixel dimensions for all elements
+   - Exact positioning and coordinates
+   - Specific margins, padding, and spacing values
+   - Grid/flex specifications with exact values
+   - Responsive breakpoints if visible
 
-2. Visual Elements:
-   - Color scheme
-   - Typography
-   - Images and media
-   - Spacing and alignment
+2. Detailed Visual Specifications:
+   - Exact hex color codes for all elements
+   - Complete typography details (font family, size, weight, line height)
+   - Border specifications (width, style, color)
+   - Shadow effects (offset, blur, spread, color)
+   - Opacity and overlay values
+   - Image dimensions and aspect ratios
 
-3. Interactive Components:
-   - Buttons and CTAs
-   - Forms and inputs
-   - Navigation menus
-   - Dynamic elements
+3. Component-Specific Details:
+   - Button dimensions and states (hover, active, disabled)
+   - Input field specifications
+   - Icon sizes and styles
+   - List item spacing and styling
+   - Card/container border-radius and effects
+   - Navigation item styling and spacing
 
-4. Content Organization:
-   - Information hierarchy
-   - Content sections
-   - Data presentation
+4. Content and Text:
+   - Exact text content
+   - Text alignment and transformation
+   - Link styling and states
+   - List style specifications
+   - Content padding and margins
 
-Please provide a structured JSON response in the following format:
+5. Interactive Elements:
+   - Hover state colors and transitions
+   - Animation specifications (timing, easing)
+   - Form element styling
+   - Dropdown/menu specifications
+   - Modal/dialog styling if present
+
+Please provide a structured JSON response that captures EVERY visual detail in this format:
 {
   "layout": {
-    "header": { ... },
-    "mainContent": { ... },
-    "sidebar": { ... },
-    "footer": { ... }
+    "header": {
+      "height": "exact_px",
+      "padding": "exact_values",
+      "elements": [
+        {
+          "type": "element_type",
+          "dimensions": {"width": "px", "height": "px"},
+          "position": {"top": "px", "left": "px"},
+          "styling": {
+            "backgroundColor": "#exact_hex",
+            "fontSize": "px",
+            "fontFamily": "exact_font",
+            "margin": "exact_values",
+            "padding": "exact_values"
+          }
+        }
+      ]
+    },
+    "mainContent": { similar_detailed_structure },
+    "sidebar": { similar_detailed_structure },
+    "footer": { similar_detailed_structure }
   },
-  "visualElements": { ... },
-  "interactiveComponents": { ... },
-  "contentStructure": { ... }
+  "visualElements": {
+    "colorPalette": {
+      "primary": "#exact_hex",
+      "secondary": "#exact_hex",
+      "background": "#exact_hex",
+      "text": "#exact_hex"
+    },
+    "typography": {
+      "headings": {
+        "h1": {"size": "px", "weight": "value", "lineHeight": "value", "font": "exact_font"},
+        "h2": {similar_structure}
+      },
+      "body": {similar_structure}
+    }
+  },
+  "interactiveComponents": {
+    "buttons": {
+      "primary": {
+        "default": {detailed_styles},
+        "hover": {detailed_styles},
+        "active": {detailed_styles}
+      }
+    },
+    "inputs": {detailed_styles},
+    "dropdowns": {detailed_styles}
+  }
 }`
       },
     ];

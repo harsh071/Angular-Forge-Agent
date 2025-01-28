@@ -122,13 +122,9 @@
   }
   
   .container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-height: 100vh;
+    padding: 0;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
   }
   
   mat-grid-list {
@@ -312,5 +308,26 @@ mat-error {
   mat-card-content {
     color: #e65100;
   }
+}
+
+.tab-content {
+  padding: 20px;
+}
+
+mat-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+::ng-deep .mat-mdc-tab-body-wrapper {
+  height: 100%;
+}
+
+.upload-card,
+.description-card,
+.code-card,
+.snippets-card {
+  margin-bottom: 20px;
 }
 

@@ -1,37 +1,119 @@
-<div class="main">
-  <div class="content">
-    <div class="margin">Please upload an image to replicate it in Material angular: </div>
-    <mat-menu #viewOptions="matMenu">
-      <button mat-menu-item>Day</button>
-      <button mat-menu-item>Month</button>
-      <button mat-menu-item>Year</button>
-    </mat-menu> 
-    <input type="file" class="file-input" (change)="onFileSelected($event)" #fileUpload>
-    <div class="file-upload margin">
-      {{fileName || "No file uploaded yet, click the button to upload a file."}}
-    </div>
-    <button mat-flat-button color="primary" class="upload-btn" (click)="fileUpload.click()">
-      <mat-icon>attach_file</mat-icon>
-      Upload
-    </button>
-    <div class="margin">{{imageDescription}}</div>
+<div class="container">
+  <mat-card class="upload-card">
+    <mat-card-header>
+      <mat-card-title>Upload Screenshot</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="file-upload">
+        <input type="file" 
+               accept="image/*" 
+               (change)="handleFileUpload($event)" 
+               #fileInput 
+               [style.display]="'none'">
+        <button mat-raised-button 
+                color="primary" 
+                (click)="fileInput.click()"
+                [disabled]="isLoading">
+          <mat-icon>upload</mat-icon>
+          Upload Screenshot
+        </button>
+      </div>
+
+      <mat-progress-bar *ngIf="isLoading" mode="indeterminate"></mat-progress-bar>
+      
+      <mat-error *ngIf="error">{{ error }}</mat-error>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Debug info -->
+  <mat-card *ngIf="generatedFiles.length === 0 && description" class="debug-card">
+    <mat-card-content>
+      <p>Waiting for code generation...</p>
+      <p>Description is available but no code files yet.</p>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="results" *ngIf="description || generatedFiles.length > 0">
+    <mat-card class="description-card">
+      <mat-card-header>
+        <mat-card-title>Generated Description</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <pre>{{ description }}</pre>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="code-card" *ngIf="generatedFiles.length > 0">
+      <mat-card-header>
+        <mat-card-title>Generated Code</mat-card-title>
+        <mat-card-subtitle>{{ generatedFiles.length }} file(s) generated</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="file-list">
+          <mat-nav-list>
+            <a mat-list-item 
+               *ngFor="let file of generatedFiles" 
+               (click)="selectFile(file)"
+               [class.selected]="selectedFile === file">
+              <mat-icon matListItemIcon>{{ getFileIcon(file.filename) }}</mat-icon>
+              <span matListItemTitle>{{ file.filename }}</span>
+            </a>
+          </mat-nav-list>
+        </div>
+
+        <div class="code-preview" *ngIf="selectedFile">
+          <div class="code-header">
+            <span>{{ selectedFile.filename }}</span>
+            <button mat-icon-button 
+                    (click)="copyText(codeElement)" 
+                    matTooltip="Copy to clipboard">
+              <mat-icon>content_copy</mat-icon>
+            </button>
+          </div>
+          <div #codeElement>
+            <app-dynamic-content 
+              [dynamicHtml]="getFormattedHtml(selectedFile.content)"
+              [dynamicCss]="getCodeStyles()">
+            </app-dynamic-content>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
-  <div class="title">List of generated items</div>
-  <div *ngFor="let item of itemsCollection?.code" class="codes">
-    <div #textToCopy>
-      <pre>{{item}}</pre>
-    </div>
-    <button class="button" mat-flat-button color="warn" (click)="copyText(textToCopy)">Copy to Clipboard</button>
-  </div>
-  <div class="code-generated-list">
-    <ng-container *ngFor="let code of codeSnippets">
-      <mat-expansion-panel hideToggle>
-        <mat-expansion-panel-header>
-          <mat-panel-title>{{code.filename}}</mat-panel-title>
-          <mat-panel-description></mat-panel-description>
-        </mat-expansion-panel-header>
-        <app-dynamic-content [dynamicHtml]="code.content[1].content" [dynamicCss]="code.content[2].content"></app-dynamic-content>
-      </mat-expansion-panel>
-    </ng-container>
+  <div class="code-snippets" *ngIf="codeSnippets.length > 0">
+    <mat-card class="snippets-card">
+      <mat-card-header>
+        <mat-card-title>Code Snippets</mat-card-title>
+        <mat-card-subtitle>{{ codeSnippets.length }} snippet(s) available</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-accordion>
+          <mat-expansion-panel *ngFor="let snippet of codeSnippets">
+            <mat-expansion-panel-header>
+              <mat-panel-title>
+                <mat-icon>{{ getFileIcon(snippet.filename) }}</mat-icon>
+                &nbsp;Snippet {{ snippet.filename }}
+              </mat-panel-title>
+            </mat-expansion-panel-header>
+
+            <div class="snippet-content">
+              <div class="code-header">
+                <button mat-icon-button 
+                        (click)="copyText(snippetCode)" 
+                        matTooltip="Copy to clipboard">
+                  <mat-icon>content_copy</mat-icon>
+                </button>
+              </div>
+              <div #snippetCode>
+                <app-dynamic-content 
+                  [dynamicHtml]="snippet.content[1].content"
+                  [dynamicCss]="snippet.content[2].content">
+                </app-dynamic-content>
+              </div>
+            </div>
+          </mat-expansion-panel>
+        </mat-accordion>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>

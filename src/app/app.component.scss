@@ -123,6 +123,12 @@
   
   .container {
     padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 100vh;
   }
   
   mat-grid-list {
@@ -193,4 +199,118 @@
   }
 
 }  
+
+.upload-card {
+  width: 100%;
+  
+  .file-upload {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+}
+
+.results {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.description-card,
+.code-card {
+  width: 100%;
+  height: 100%;
+  
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 0;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+}
+
+.code-card {
+  display: flex;
+  flex-direction: column;
+
+  mat-card-content {
+    display: flex;
+    gap: 20px;
+    flex: 1;
+    min-height: 400px;
+  }
+
+  mat-card-subtitle {
+    margin-top: 4px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
+.file-list {
+  width: 200px;
+  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  overflow-y: auto;
+
+  .selected {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  mat-nav-list {
+    padding: 0;
+  }
+}
+
+.code-preview {
+  flex: 1;
+  overflow: auto;
+  background: #1e1e1e;
+  border-radius: 4px;
+
+  app-dynamic-content {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+mat-progress-bar {
+  margin-top: 20px;
+}
+
+mat-error {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  
+  span {
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9em;
+  }
+}
+
+// Debug styles
+.debug-card {
+  background-color: #fff3e0;
+  margin-bottom: 20px;
+
+  mat-card-content {
+    color: #e65100;
+  }
+}
 

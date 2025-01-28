@@ -17,7 +17,7 @@ interface GeneratedFile {
 
 interface WebpageDescription {
   description: string;
-  code: string[];
+  code: GeneratedFile[];
 }
 
 @Injectable({
@@ -219,16 +219,26 @@ ${materialImports}`
   }
 
   private async saveToFirestore(description: string, files: GeneratedFile[]): Promise<void> {
-    const formattedFiles = files.map(file => file.content);
-    const randomId = Math.floor(Math.random() * 1000).toString();
-    
-    const data: WebpageDescription = {
-      description,
-      code: formattedFiles,
-    };
+    try {
+      const randomId = Math.floor(Math.random() * 1000).toString();
+      
+      const data: WebpageDescription = {
+        description,
+        code: files,
+      };
 
-    await this.firestoreService.addData('items', 'description-code', { 
-      [randomId]: data 
-    });
+      await this.firestoreService.addData('items', 'description-code', { 
+        [randomId]: data 
+      });
+
+      console.log('Successfully saved to Firestore:', {
+        collectionId: 'items',
+        documentId: 'description-code',
+        data: data
+      });
+    } catch (error: any) {
+      console.error('Error saving to Firestore:', error);
+      throw new Error(`Failed to save to Firestore: ${error?.message || 'Unknown error'}`);
+    }
   }
 }

@@ -128,16 +128,41 @@ export class CodeGenerationService {
       
       const cleanedText = this.cleanGeneratedCode(text);
       const parsedFiles = this.parseGeneratedFiles(cleanedText);
-      
       if (parsedFiles && parsedFiles.length > 0) {
         this.generatedFilesSubject.next(parsedFiles);
-        await this.firestoreService.saveData('items', 'description-code', {
-          description: text,
-          code: parsedFiles
+
+        const randomId = Math.floor(Math.random() * 1000000).toString(); // Increased range for better uniqueness
+        const renderedTemplate = await this.renderTemplate(parsedFiles);
+
+        const renderedFile: GeneratedFile = {
+          filename: 'rendered-template.html',
+          content: renderedTemplate
+        };
+        
+        // Update the rendered template subject
+        this.renderedTemplateSubject.next(renderedTemplate);
+        let newparsedFiles = [...parsedFiles, renderedFile];
+
+        const data: WebpageDescription = {
+          description: randomId,
+          code: newparsedFiles,
+        };
+  
+        await this.firestoreService.saveData('items', 'description-code', { 
+          [randomId]: data 
         });
-      } else {
-        throw new Error('Failed to parse generated files');
+  
       }
+      // if (parsedFiles && parsedFiles.length > 0) {
+      //   this.generatedFilesSubject.next(parsedFiles);
+
+      //   await this.firestoreService.saveData('items', 'description-code', {
+      //     description: text,
+      //     code: parsedFiles
+      //   });
+      // } else {
+      //   throw new Error('Failed to parse generated files');
+      // }
     } catch (error) {
       this.errorSubject.next(error as string);
       console.error('Error generating from image:', error);

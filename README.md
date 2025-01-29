@@ -1,6 +1,12 @@
 # LibgenUI
 
-A modern web application built with Angular that provides a user interface for code generation and management. This project uses Firebase for backend services and Google's Gemini AI for code generation capabilities.
+A browser-based AI tool that helps users build web applications in Angular without writing code, similar to bolt.new but specifically  designed for Angular development. This project combines Firebase for backend services and Google's Gemini AI for intelligent code generation capabilities. It allows developers to generate, preview, and render Angular components in real-time, making it easier to prototype and develop Angular applications.
+
+The application serves as an interactive playground where you can:
+- Generate Angular components and code using AI
+- Instantly preview the rendered output
+- Save and manage your code snippets
+- Share and reuse components
 
 ![LibgenUI Interface](docs/assets/libgenui-interface.png)
 
@@ -107,6 +113,7 @@ ng serve
   - Component HTML (*.component.html)
   - Component TypeScript (*.component.ts)
   - Component Styles (*.component.scss)
+- An exa
 
 ## Contributing
 

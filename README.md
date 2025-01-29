@@ -116,7 +116,6 @@ ng serve
   - Component HTML (*.component.html)
   - Component TypeScript (*.component.ts)
   - Component Styles (*.component.scss)
-- An exa
 
 ## Contributing
 

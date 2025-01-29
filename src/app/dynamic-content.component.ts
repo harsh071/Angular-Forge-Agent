@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Material Form Controls
@@ -44,12 +44,16 @@ import { MatSortModule } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 
+// interface Video { title: string; description: string; date: Date; views: number; thumbnail: string; channel: { name: string; imageUrl: string }; }
+
+
 @Component({
   selector: 'app-dynamic-content',
   standalone: true,
   template: `<ng-container #dynamicContentContainer></ng-container>`
 })
 export class DynamicContentComponent implements OnInit {
+  @Input() dynamicTs: string;
   @Input() dynamicHtml: string;
   @Input() dynamicCss: string;
 
@@ -71,10 +75,35 @@ export class DynamicContentComponent implements OnInit {
     const styles = `:host {
       ${this.dynamicCss}
     }`
+    
+    // Extract the TypeScript code without imports
+    const dynamicTs = this.dynamicTs; // Capture in closure
+    let processedTs = '';
+    
+    try {
+      // Remove import statements and convert types to any
 
-    const tmpCmp = Component({ template: template, styles: [styles] })(class {});
-    const tmpModule = NgModule({
-      declarations: [tmpCmp],
+
+      // Extract the class content
+      const classMatch = processedTs.match(/export\s+class\s+\w+\s*{([\s\S]*?)}/);
+      if (classMatch) {
+        // Get the class body content, preserving all formatting
+        const classContent = classMatch[1];
+        // Create a function that returns an object with the class content
+        processedTs = `
+          return {
+            ${classContent}
+          };
+        `;
+        console.log('Processed TypeScript:', processedTs);
+      }
+    } catch (error) {
+      console.error('Error processing TypeScript:', error);
+    }
+
+    const tmpCmp = Component({ 
+      template: template, 
+      styles: [styles],
       imports: [
         CommonModule, 
         MatToolbarModule, 
@@ -120,19 +149,27 @@ export class DynamicContentComponent implements OnInit {
         MatSortModule,
         MatTableModule,
       ],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA]
-    })(class {});
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      standalone: true
+    })(class {
+      constructor() {
+        try {
+          if (processedTs) {
+            const dynamicCode = new Function(processedTs);
+            Object.assign(this, dynamicCode());
+          }
+        } catch (error) {
+          console.error('Error evaluating dynamic TypeScript:', error);
+        }
+      }
+    });
 
-    const moduleFactory = await this.compiler.compileModuleAsync(tmpModule);
-    // const moduleRef = moduleFactory.create(this.injector);
-
+    // Create an instance of the component
     const componentRef: ComponentRef<any> = this.viewContainerRef.createComponent(
       tmpCmp,
-      { environmentInjector: this.envInjector } // Optional, for dependency injection
+      { 
+        environmentInjector: this.envInjector
+      }
     );
-
-    // const compFactory = moduleRef.componentFactoryResolver.resolveComponentFactory(tmpCmp);
-    // this.dynamicContentContainer.createComponent(compFactory);
-    
   }
 }

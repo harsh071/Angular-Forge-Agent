@@ -43,6 +43,10 @@ export class GeminiService {
   // Add property for formatted files
   formatedFiles: string[] = [];
 
+  // Add property for rendered template
+  private renderedTemplateSubject = new BehaviorSubject<string>('');
+  renderedTemplate$ = this.renderedTemplateSubject.asObservable();
+
   constructor(private firestoreService: FirestoreService) {
     // Replace with your actual API key
     this.genAI = new GoogleGenerativeAI(environment.firebase.apiKey);
@@ -60,41 +64,43 @@ export class GeminiService {
     });
   }
 
-  private readonly ANGULAR_CODE_PROMPT = `You are an expert Angular developer. Generate clean, modern, and well-structured Angular code based on the following requirements. 
-  Include all necessary imports and ensure the code follows Angular best practices. Format the response as valid HTML/SCSS code only, without any explanations or markdown.
+  private readonly ANGULAR_CODE_PROMPT = `You are an expert Angular developer. Generate a realistic HTML template with mock data for an Angular application. 
+  The HTML should include realistic content, sample data, and proper Material Design components.
 
   Requirements:
 1. Use Angular Material components
-2. Implement responsive design
-3. Follow Angular best practices
-4. Include proper TypeScript typing
-5. Use Material theming
+2. Include realistic mock data (user names, descriptions, dates, etc.)
+3. Create a complete page layout
+4. Use Material icons where appropriate
+5. Include proper Angular template syntax
+6. DO NOT ADD ANY IMPORT STATEMENTS
+7. DO NOT ADD ANY COMPONENT DECORATORS
+8. ADD ONLY THE CLASS CODE in the ts file.
+9. ALL TYPES HAVE TO BE any or any[]
 
+Output in this format:
 The response MUST be a valid JSON array exactly matching this structure (including proper escaping):
-[
-  {
+[{
     "filename": "app.component.ts",
-    "content": "import { Component } from '@angular/core';\n\n@Component({\n  selector: 'app-root',\n  templateUrl: './app.component.html',\n  styleUrls: ['./app.component.scss']\n})\nexport class AppComponent {\n  // Your component logic here\n}"
+    "content": "{\n  // Your component logic here\n}" //DO NOT ADD ANY IMPORT STATEMENTS, or class decorators
   },
   {
     "filename": "app.component.html",
-    "content": "<mat-toolbar color=\\"primary\\">\n  <!-- Your template here -->\n</mat-toolbar>"
+    "content": "code here"
   },
   {
     "filename": "app.component.scss",
     "content": "/* Your styles here */\n\n.container {\n  // Your SCSS styles\n}"
-  }
-]
+  }]
 
 Important formatting rules:
 1. All strings must use escaped double quotes (\\"example\\")
 2. Use proper line breaks with \\n
 3. The entire response must be valid JSON that can be parsed with JSON.parse()
-4. Include all necessary Angular Material imports and components
-5. Ensure proper component structure with TypeScript decorators
-6. Include responsive SCSS styles
+4. Include realistic mock data (names, dates, descriptions)
+5. Use proper Angular Material components and directives
+6. Include proper Angular template syntax (ngFor, ngIf, etc.)
 7. Follow the exact structure of the example above
-
 `;
 
   private readonly CODE_EVALUATION_PROMPT = `You are an expert Angular code reviewer. Evaluate the following code for best practices, potential issues, and improvements.
@@ -124,6 +130,25 @@ Important formatting rules:
   6. Follows the same JSON structure as the original
 
   Return only the fixed code in the same JSON array format as the original.`;
+
+  private readonly TEMPLATE_RENDER_PROMPT = `You are an expert Angular developer. Convert the provided TypeScript component code into a fully rendered HTML template with all mock data directly embedded.
+
+  Requirements:
+  1. Remove all Angular template syntax (ngFor, ngIf, etc.)
+  2. Replace all dynamic bindings with actual values from the TypeScript code
+  3. Keep all Material Design components and styling
+  4. Maintain the same visual structure and layout
+  5. Include all mock data directly in the HTML
+  6. Remove any data bindings and replace with static content
+  7. Keep all styling classes and Material Design attributes
+  8. Wrap the entire content in <body> tags
+  9. Do not include <html>, <head>, or any other tags outside the <body> tags
+
+  The output should be a single HTML file with content wrapped in <body> tags that can be directly viewed in a browser without typescript, for example:
+  <body>
+    <mat-toolbar color="primary">...</mat-toolbar>
+    ...content...
+  </body>`;
 
   async initGemini(input: string, isTextPrompt: boolean = false): Promise<void> {
     try {
@@ -169,7 +194,24 @@ Important formatting rules:
             finalFiles = await this.fixCode(parsedFiles, evaluation);
           }
 
+          // Generate the rendered template
+          console.log('Generating rendered template...');
+          const renderedTemplate = await this.renderTemplate(finalFiles);
+          
+          // Create a new file for the rendered template
+          const renderedFile: GeneratedFile = {
+            filename: 'rendered-template.html',
+            content: renderedTemplate
+          };
+          
+          // Update the rendered template subject
+          this.renderedTemplateSubject.next(renderedTemplate);
+          
+          // Add the rendered file to finalFiles
+          finalFiles = [...finalFiles, renderedFile];
+          
           this.formatedFiles = [JSON.stringify(finalFiles, null, 2)];
+
           await this.saveToFirestore(
             isTextPrompt ? input : text,
             finalFiles
@@ -191,9 +233,26 @@ Important formatting rules:
 
   private parseGeneratedFiles(text: string): GeneratedFile[] | null {
     try {
+      // Remove any markdown code block indicators and clean the text
+      text = text.replace(/```(json)?\n/g, '');
+      text = text.replace(/```\n?/g, '');
+      text = text.trim();
+
+      // Remove any control characters that could corrupt the JSON
+      text = text.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+
       // First try to parse the entire text as JSON
       try {
         const directParse = JSON.parse(text);
+        
+        // Handle case where files are nested under a "files" key
+        if (directParse.files && Array.isArray(directParse.files)) {
+          if (directParse.files.length > 0 && 'filename' in directParse.files[0]) {
+            return directParse.files;
+          }
+        }
+        
+        // Handle case where it's a direct array of files
         if (Array.isArray(directParse) && directParse.length > 0 && 'filename' in directParse[0]) {
           return directParse;
         }
@@ -201,12 +260,22 @@ Important formatting rules:
         // If direct parse fails, continue with substring extraction
       }
 
-      // Find the JSON array in the text
-      const matches = text.match(/\[\s*\{\s*"filename"[\s\S]*\}\s*\]/g);
+      // Find the JSON array in the text and clean it
+      const matches = text.match(/\{\s*"files"\s*:\s*\[\s*\{[\s\S]*\}\s*\]\s*\}|\[\s*\{\s*"filename"[\s\S]*\}\s*\]/g);
       if (matches && matches.length > 0) {
-        const jsonStr = matches[0];
+        let jsonStr = matches[0];
+        // Additional cleaning of the extracted JSON string
+        jsonStr = jsonStr.replace(/[\x00-\x1F\x7F-\x9F]/g, '');
+        
         const parsed = JSON.parse(jsonStr);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        
+        // Handle nested files structure
+        if (parsed.files && Array.isArray(parsed.files)) {
+          return parsed.files;
+        }
+        
+        // Handle direct array structure
+        if (Array.isArray(parsed)) {
           return parsed;
         }
       }
@@ -359,6 +428,60 @@ Important formatting rules:
     } catch (error) {
       console.error('Error fixing code:', error);
       return files; // Return original files if fix fails
+    }
+  }
+
+  private extractBodyContent(html: string): string {
+    try {
+      // First try to match content between body tags
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      if (bodyMatch && bodyMatch[1]) {
+        return bodyMatch[1].trim();
+      }
+      
+      // If no body tags found, return the entire content
+      // but first check if it starts with any HTML/Material components
+      if (html.trim().startsWith('<mat-') || html.trim().startsWith('<div') || html.trim().startsWith('<app-')) {
+        return html.trim();
+      }
+      
+      console.warn('No valid HTML content found in template');
+      return '';
+    } catch (error) {
+      console.error('Error extracting body content:', error);
+      return '';
+    }
+  }
+
+  private async renderTemplate(files: GeneratedFile[]): Promise<string> {
+    try {
+      // Find the TypeScript and HTML files
+      const tsFile = files.find(f => f.filename.endsWith('.ts'));
+      const htmlFile = files.find(f => f.filename.endsWith('.html'));
+
+      if (!tsFile || !htmlFile) {
+        throw new Error('Missing required TypeScript or HTML files');
+      }
+
+      const result = await this.model.generateContent([
+        this.TEMPLATE_RENDER_PROMPT,
+        `TypeScript File:\n${tsFile.content}\n\nHTML Template:\n${htmlFile.content}`
+      ]);
+      
+      const response = await result.response;
+      const fullHtml = response.text();
+      
+      // Extract only the body content
+      const bodyContent = this.extractBodyContent(fullHtml);
+      
+      if (!bodyContent) {
+        throw new Error('Failed to extract valid HTML content from template');
+      }
+      
+      return bodyContent;
+    } catch (error) {
+      console.error('Error rendering template:', error);
+      throw error;
     }
   }
 }

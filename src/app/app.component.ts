@@ -141,6 +141,9 @@ export class AppComponent implements OnInit {
   isLoading: boolean = false;
   error: string | null = null;
   textPrompt: string = '';
+  getContet(content: GeneratedFile[]): string {
+    return content[3] ? content[3].content : content[1].content;
+  }
 
   constructor(
     public geminiService: GeminiService,

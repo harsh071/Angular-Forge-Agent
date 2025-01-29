@@ -142,7 +142,8 @@
                     </div>
                     <div #snippetCode>
                       <app-dynamic-content 
-                        [dynamicHtml]="snippet.content[1].content"
+                        [dynamicTs]="snippet.content[0].content"
+                        [dynamicHtml]="getContet(snippet.content)"
                         [dynamicCss]="snippet.content[2].content">
                       </app-dynamic-content>
                     </div>

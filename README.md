@@ -34,9 +34,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Project Setup
 
 ```bash
-# Clone the repository
-git clone [your-repo-url]
-cd libgenUI
+# Clone/fork the repository
 
 # Install dependencies
 npm install

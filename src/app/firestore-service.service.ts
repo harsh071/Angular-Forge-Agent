@@ -1,33 +1,43 @@
 import { Injectable } from '@angular/core';
-import { Firestore, addDoc, collection, doc, updateDoc, getDoc } from '@angular/fire/firestore'; // Change the import statement
-import { BehaviorSubject, Observable, isEmpty } from 'rxjs';
+import { Firestore, addDoc, collection, doc, updateDoc, getDoc } from '@angular/fire/firestore';
+import { BehaviorSubject, Observable, from } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FirestoreService {
   public itemsCollection: BehaviorSubject<{ [key: string]: any }> = new BehaviorSubject({});
+
   constructor(private firestore: Firestore) {}
-  addData(collectionName: string, documentName: string, data: { [key: string]: any }) {
-    const itemsCollection = doc(this.firestore, collectionName, documentName);
-    updateDoc(itemsCollection, {
-      ...data
-    });
-    return ;
+
+  async saveData(collectionName: string, documentName: string, data: { [key: string]: any }): Promise<void> {
+    try {
+      const itemsCollection = doc(this.firestore, collectionName, documentName);
+      await updateDoc(itemsCollection, data);
+    } catch (error) {
+      console.error('Error saving document:', error);
+      throw error;
+    }
   }
 
-  getData(collectionName: string, documentName: string): any {
+  getData(collectionName: string, documentName: string): Observable<any> {
     const itemDoc = doc(this.firestore, collectionName, documentName);
-    getDoc(itemDoc).then((doc) => {
-      if (doc.exists()) {
-        this.itemsCollection.next(doc.data());
-      } else {
-        // doc.data() will be undefined in this case
-        console.log('No such document!');
-      }
-    }
-    ).catch((error) => {
-      console.log('Error getting document:', error);
-    });
+    return from(getDoc(itemDoc)).pipe(
+      map(doc => {
+        if (doc.exists()) {
+          const data = doc.data();
+          this.itemsCollection.next(data);
+          return data;
+        } else {
+          console.log('No such document!');
+          return null;
+        }
+      }),
+      catchError(error => {
+        console.error('Error getting document:', error);
+        throw error;
+      })
+    );
   }
 }

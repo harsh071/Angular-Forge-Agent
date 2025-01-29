@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef, Inject } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef, Inject, ComponentFactory, createNgModule, createComponent } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Material Form Controls
@@ -101,8 +101,8 @@ export class DynamicContentComponent implements OnInit {
       console.error('Error processing TypeScript:', error);
     }
 
-    const tmpCmp = Component({ 
-      template: template, 
+    const componentDef = {
+      template,
       styles: [styles],
       imports: [
         CommonModule, 
@@ -151,7 +151,9 @@ export class DynamicContentComponent implements OnInit {
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
       standalone: true
-    })(class {
+    };
+
+    const DynamicComponent = class {
       constructor() {
         try {
           if (processedTs) {
@@ -162,14 +164,12 @@ export class DynamicContentComponent implements OnInit {
           console.error('Error evaluating dynamic TypeScript:', error);
         }
       }
-    });
+    };
 
-    // Create an instance of the component
-    const componentRef: ComponentRef<any> = this.viewContainerRef.createComponent(
-      tmpCmp,
-      { 
-        environmentInjector: this.envInjector
-      }
-    );
+    const decoratedComponent = Component(componentDef)(DynamicComponent);
+    const moduleRef = createNgModule(decoratedComponent, this.envInjector);
+    const componentRef = createComponent(decoratedComponent, { environmentInjector: this.envInjector });
+    this.dynamicContentContainer.clear();
+    this.dynamicContentContainer.insert(componentRef.hostView);
   }
 }

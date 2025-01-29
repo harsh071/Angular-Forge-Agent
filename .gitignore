@@ -45,5 +45,24 @@ Thumbs.db
 .firebase
 *-debug.log
 .runtimeconfig.json
-src/environments/environment.ts
-src/environments/environment.development.ts
+
+# Environment Files
+/src/environments/environment.ts
+/src/environments/environment.prod.ts
+/src/environments/environment.development.ts
+/src/environments/environment.staging.ts
+/src/environments/environment.local.ts
+.env
+.env.local
+.env.development
+.env.production
+.env.staging
+
+# Keys and Secrets
+*.key
+*.pem
+*.cert
+*.password
+*secret*
+*credential*
+firebase-adminsdk-*.json

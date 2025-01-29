@@ -8,7 +8,10 @@ The application serves as an interactive playground where you can:
 - Save and manage your code snippets
 - Share and reuse components
 
-![LibgenUI Interface](docs/assets/libgenui-interface.png)
+
+## Example Output
+
+![LibgenUI Interface](/src/assets/libgenui-interface.png)
 
 ## Features
 
@@ -118,9 +121,5 @@ ng serve
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Example Output
-
-![LibgenUI Interface](/src/assets/libgenui-interface.png)
 
 

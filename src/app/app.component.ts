@@ -61,6 +61,7 @@ interface AngularFile {
 
 interface CodeSnippet {
   filename: string;
+  title: string;
   content: GeneratedFile[];
 }
 
@@ -174,6 +175,7 @@ export class AppComponent implements OnInit {
           // For backward compatibility
           this.codeSnippets.push({
             filename: key,
+            title: this.generateSnippetTitle(codeData.description || 'Code Snippet'),
             content: codeData.code
           });
 
@@ -242,13 +244,24 @@ export class AppComponent implements OnInit {
 
   }
 
-  private processGeneratedFiles(files: string[]): void {
+  private async processGeneratedFiles(files: string[]): Promise<void> {
     if (files && files.length > 0) {
       try {
         const parsedFiles = this.parseCodeFiles(files[0]);
         if (parsedFiles) {
           this.generatedFiles = parsedFiles;
           this.selectedFile = parsedFiles[0];
+          
+          // Get a description from Gemini for the new files
+          const description = await this.geminiService.generateCodeDescription(parsedFiles);
+          
+          // Add to code snippets with the generated description
+          this.codeSnippets.unshift({
+            filename: `snippet_${Date.now()}`,
+            title: description,
+            content: parsedFiles
+          });
+          
           console.log('Parsed files:', this.generatedFiles);
         }
       } catch (error) {
@@ -372,27 +385,41 @@ export class AppComponent implements OnInit {
 
   private initializeFirestoreSubscription(): void {
     this.firestoreService.getData('items', 'description-code')
-      .subscribe((data: Record<string, FirestoreData>) => {
+      .subscribe(async (data: Record<string, FirestoreData>) => {
         try {
           console.log('Firestore data:', data);
 
           // Get the most recent entry
           const entries = Object.entries(data);
           if (entries.length > 0) {
-            const [_, latestData] = entries[entries.length - 1];
+            const [key, latestData] = entries[entries.length - 1];
             
             // Handle code data
             if (latestData.code && latestData.code.length > 0) {
+              let processedFiles: GeneratedFile[] | null = null;
+              
               if (typeof latestData.code[0] === 'string') {
                 // Handle old format where code is a string array
-                const parsedFiles = this.parseCodeFiles(latestData.code[0] as string);
-                if (parsedFiles) {
-                  this.generatedFiles = parsedFiles;
-                  console.log('Parsed files:', this.generatedFiles);
+                processedFiles = this.parseCodeFiles(latestData.code[0] as string);
+                if (processedFiles) {
+                  this.generatedFiles = processedFiles;
                 }
               } else {
                 // Handle new format where code is already an array of GeneratedFile
-                this.generatedFiles = latestData.code as GeneratedFile[];
+                processedFiles = latestData.code as GeneratedFile[];
+                this.generatedFiles = processedFiles;
+              }
+
+              if (processedFiles) {
+                // Get a description from Gemini for new files
+                const description = await this.geminiService.generateCodeDescription(processedFiles);
+                
+                // Add to code snippets with the generated description
+                this.codeSnippets.unshift({
+                  filename: key,
+                  title: description,
+                  content: processedFiles
+                });
               }
             }
 
@@ -432,5 +459,11 @@ export class AppComponent implements OnInit {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  private generateSnippetTitle(description: string): string {
+    // Extract first sentence or first 50 characters
+    const firstSentence = description.split(/[.!?]/).filter(s => s.trim())[0] || '';
+    return firstSentence.length > 50 ? firstSentence.substring(0, 47) + '...' : firstSentence;
   }
 }

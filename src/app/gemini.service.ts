@@ -150,6 +150,14 @@ Important formatting rules:
     ...content...
   </body>`;
 
+  private readonly CODE_DESCRIPTION_PROMPT = `You are an expert at writing short, concise descriptions of code. Given the following code files, provide a single sentence (max 50 characters) that describes what the code does or implements. Focus on the main functionality or purpose.
+
+Example outputs:
+- "Responsive navigation bar with user profile"
+- "Data table with sorting and filtering"
+- "Login form with OAuth integration"
+`;
+
   async initGemini(input: string, isTextPrompt: boolean = false): Promise<void> {
     try {
       let result;
@@ -482,6 +490,25 @@ Important formatting rules:
     } catch (error) {
       console.error('Error rendering template:', error);
       throw error;
+    }
+  }
+
+  async generateCodeDescription(files: GeneratedFile[]): Promise<string> {
+    try {
+      const result = await this.model.generateContent([
+        this.CODE_DESCRIPTION_PROMPT,
+        JSON.stringify(files, null, 2)
+      ]);
+      
+      const response = await result.response;
+      const text = response.text().trim();
+      
+      // Remove any quotes and limit to 50 characters
+      const cleanText = text.replace(/^["']|["']$/g, '');
+      return cleanText.length > 50 ? cleanText.substring(0, 47) + '...' : cleanText;
+    } catch (error) {
+      console.error('Error generating code description:', error);
+      return 'Code Snippet';
     }
   }
 }

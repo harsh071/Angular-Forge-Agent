@@ -1,23 +1,119 @@
-# Webapp
+# LibgenUI
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+A modern web application built with Angular that provides a user interface for code generation and management. This project uses Firebase for backend services and Google's Gemini AI for code generation capabilities.
 
-## Runing the application
-Go to environment.development.ts and insert your API key for Gemini \webapp\src\environments\environment.development.ts
+![LibgenUI Interface](docs/assets/libgenui-interface.png)
 
-This is a simple angular app, docs: https://angular.io/guide/setup-local
-run `npm install`
-Run `ng serve` for a dev env. Navigate to `http://localhost:4200/`
+## Features
 
-## Copying code to see how it works. 
-** Copy the code to a seperate screen or window. ** - This is important, because if you paste it in the app itself it will refresh and you will lose the data. 
+- Code generation using Gemini AI
+- Code snippet management and storage
+- Real-time code preview
+- Syntax highlighting
+- Dynamic content generation
+- File upload capabilities
 
-Copy all three files. 
+## Prerequisites
 
-Go to app.component.html -> paste the html code 
+Before you begin, ensure you have the following installed:
+- Node.js (v18 or higher)
+- npm (comes with Node.js)
+- Angular CLI (`npm install -g @angular/cli`)
 
-Go to app.component.ts -> paste the ts code 
+## Setup Instructions
 
-Go to app.component.css -> paste the css code
+### 1. Project Setup
 
-- The app should auto refresh and you should be able to see the results.
+```bash
+# Clone the repository
+git clone [your-repo-url]
+cd libgenUI
+
+# Install dependencies
+npm install
+```
+
+### 2. Firebase Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project
+3. Enable Firestore Database
+   - Go to Firestore Database in the Firebase Console
+   - Click "Create Database"
+   - Choose production or test mode based on your needs
+   - Select a location for your database
+
+4. Get Firebase Configuration:
+   - Go to Project Settings
+   - Under "Your apps", click the web icon (</>)
+   - Register your app with a nickname
+   - Copy the Firebase configuration object
+
+5. Configure Firebase in the application:
+   - Navigate to `src/environments/environment.development.ts`
+   - Update the Firebase configuration:
+
+```typescript
+export const environment = {
+  firebase: {
+    apiKey: 'your-api-key',
+    authDomain: 'your-auth-domain',
+    projectId: 'your-project-id',
+    storageBucket: 'your-storage-bucket',
+    messagingSenderId: 'your-messaging-sender-id',
+    appId: 'your-app-id'
+  },
+  // ... other configurations
+};
+```
+
+### 3. Gemini API Setup
+
+1. Go to [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a new API key
+3. Configure the Gemini API key:
+   - Navigate to `src/environments/environment.development.ts`
+   - Add your Gemini API key:
+
+```typescript
+export const environment = {
+  // ... Firebase config
+  geminiApiKey: 'your-gemini-api-key'
+};
+```
+
+## Running the Application
+
+```bash
+# Start the development server
+ng serve
+
+# Navigate to http://localhost:4200 in your browser
+```
+
+## Development Notes
+
+- The application uses Angular Material for UI components
+- Code snippets are stored in Firebase Firestore
+- Real-time code preview is available for immediate feedback
+- Syntax highlighting is implemented using a custom pipe
+
+## Important Usage Notes
+
+**When copying code examples:**
+- Copy the code to a separate window/editor first
+- Don't paste directly into the app as it may cause a refresh and data loss
+- When implementing examples, ensure you copy all three files:
+  - Component HTML (*.component.html)
+  - Component TypeScript (*.component.ts)
+  - Component Styles (*.component.scss)
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Example Output
+
+![LibgenUI Interface](/src/assets/libgenui-interface.png)
+
+

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FileManagementService } from '../../services/file-management.service';
 import { UiStateService, CodeSnippet } from '../../services/ui-state.service';
-import { DynamicContentComponent } from '../dynamic-content/dynamic-content.component';
+import { DynamicContentComponent } from '../../dynamic-content.component';
 
 @Component({
   selector: 'app-code-snippets',
@@ -90,7 +90,7 @@ import { DynamicContentComponent } from '../dynamic-content/dynamic-content.comp
   `]
 })
 export class CodeSnippetsComponent implements OnInit {
-  codeSnippets: CodeSnippet[] = [];
+  @Input() codeSnippets: CodeSnippet[] = [];
 
   constructor(
     private fileManagementService: FileManagementService,
@@ -108,6 +108,7 @@ export class CodeSnippetsComponent implements OnInit {
   }
 
   getContent(content: any[]): string {
+    // console.log('Content:', content);
     return content[3] ? content[3].content : content[1].content;
   }
 

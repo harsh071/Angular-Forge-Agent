@@ -8,7 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CodeGenerationService, GeneratedFile } from '../../services/code-generation.service';
 import { FileManagementService } from '../../services/file-management.service';
 import { UiStateService } from '../../services/ui-state.service';
-import { DynamicContentComponent } from '../dynamic-content/dynamic-content.component';
+import { DynamicContentComponent } from '../../dynamic-content.component';
 
 @Component({
   selector: 'app-code-preview',
@@ -55,17 +55,16 @@ import { DynamicContentComponent } from '../dynamic-content/dynamic-content.comp
             <div class="code-header">
               <span>{{ selectedFile.filename }}</span>
               <button mat-icon-button 
-                      (click)="copyText(codeElement)" 
                       matTooltip="Copy to clipboard">
                 <mat-icon>content_copy</mat-icon>
               </button>
             </div>
-            <div #codeElement>
+            <!-- <div #codeElement>
               <app-dynamic-content 
                 [dynamicHtml]="getFormattedHtml(selectedFile.content)"
                 [dynamicCss]="getCodeStyles()">
               </app-dynamic-content>
-            </div>
+            </div> -->
           </div>
         </mat-card-content>
       </mat-card>

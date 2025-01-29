@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef, Inject, ComponentFactory, createNgModule, createComponent } from '@angular/core';
+import { Component, Input, OnInit, ViewChild, ViewContainerRef, Compiler, Injector, NgModule, NgModuleRef, CUSTOM_ELEMENTS_SCHEMA, EnvironmentInjector, ComponentRef, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Material Form Controls
@@ -82,8 +82,6 @@ export class DynamicContentComponent implements OnInit {
     
     try {
       // Remove import statements and convert types to any
-
-
       // Extract the class content
       const classMatch = processedTs.match(/export\s+class\s+\w+\s*{([\s\S]*?)}/);
       if (classMatch) {
@@ -101,8 +99,8 @@ export class DynamicContentComponent implements OnInit {
       console.error('Error processing TypeScript:', error);
     }
 
-    const componentDef = {
-      template,
+    const tmpCmp = Component({ 
+      template: template, 
       styles: [styles],
       imports: [
         CommonModule, 
@@ -151,9 +149,8 @@ export class DynamicContentComponent implements OnInit {
       ],
       schemas: [CUSTOM_ELEMENTS_SCHEMA],
       standalone: true
-    };
-
-    const DynamicComponent = class {
+    })(
+    class {
       constructor() {
         try {
           if (processedTs) {
@@ -164,12 +161,14 @@ export class DynamicContentComponent implements OnInit {
           console.error('Error evaluating dynamic TypeScript:', error);
         }
       }
-    };
+    });
 
-    const decoratedComponent = Component(componentDef)(DynamicComponent);
-    const moduleRef = createNgModule(decoratedComponent, this.envInjector);
-    const componentRef = createComponent(decoratedComponent, { environmentInjector: this.envInjector });
-    this.dynamicContentContainer.clear();
-    this.dynamicContentContainer.insert(componentRef.hostView);
+    // Create an instance of the component
+    const componentRef: ComponentRef<any> = this.viewContainerRef.createComponent(
+      tmpCmp,
+      { 
+        environmentInjector: this.envInjector
+      }
+    );
   }
 }

@@ -14,7 +14,11 @@ export class FirestoreService {
   async saveData(collectionName: string, documentName: string, data: { [key: string]: any }): Promise<void> {
     try {
       const itemsCollection = doc(this.firestore, collectionName, documentName);
-      await updateDoc(itemsCollection, data);
+      updateDoc(itemsCollection, {
+        ...data
+      });
+      return ;
+      // await updateDoc(itemsCollection, data);
     } catch (error) {
       console.error('Error saving document:', error);
       throw error;

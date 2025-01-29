@@ -367,7 +367,7 @@ Example outputs:
         code: files,
       };
 
-      await this.firestoreService.addData('items', 'description-code', { 
+      await this.firestoreService.saveData('items', 'description-code', { 
         [randomId]: data 
       });
 

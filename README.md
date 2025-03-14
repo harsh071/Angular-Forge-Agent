@@ -119,8 +119,5 @@ ng serve
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Example Output
-
-![LibgenUI Interface](/src/assets/libgenui-interface.png)
 
 
